@@ -8,24 +8,24 @@ from typing import Dict, Optional, Union
 import json
 import torch
 
-class KModel(torch.nn.Module):
+class IndicModel(torch.nn.Module):
     '''
-    KModel is a torch.nn.Module with 2 main responsibilities:
+    IndicModel is a torch.nn.Module with 2 main responsibilities:
     1. Init weights, downloading config.json + model.pth from HF if needed
     2. forward(phonemes: str, ref_s: FloatTensor) -> (audio: FloatTensor)
 
-    You likely only need one KModel instance, and it can be reused across
-    multiple KPipelines to avoid redundant memory allocation.
+    You likely only need one IndicModel instance, and it can be reused across
+    multiple IndicPipelines to avoid redundant memory allocation.
 
-    Unlike KPipeline, KModel is language-blind.
+    Unlike IndicPipeline, IndicModel is language-blind.
 
-    KModel stores self.vocab and thus knows how to map phonemes -> input_ids,
-    so there is no need to repeatedly download config.json outside of KModel.
+    IndicModel stores self.vocab and thus knows how to map phonemes -> input_ids,
+    so there is no need to repeatedly download config.json outside of IndicModel.
     '''
 
     MODEL_NAMES = {
-        'hexgrad/Kokoro-82M': 'kokoro-v1_0.pth',
-        'hexgrad/Kokoro-82M-v1.1-zh': 'kokoro-v1_1-zh.pth',
+        'Bindkushal/IndicVoice-82M': 'indicvoice-v1_0.pth',
+        'Bindkushal/IndicVoice-82M-v1.1': 'indicvoice-v1_1.pth',
     }
 
     def __init__(
@@ -37,7 +37,7 @@ class KModel(torch.nn.Module):
     ):
         super().__init__()
         if repo_id is None:
-            repo_id = 'hexgrad/Kokoro-82M'
+            repo_id = 'Bindkushal/IndicVoice-82M'
             print(f"WARNING: Defaulting repo_id to {repo_id}. Pass repo_id='{repo_id}' to suppress this warning.")
         self.repo_id = repo_id
         if not isinstance(config, dict):
@@ -64,7 +64,7 @@ class KModel(torch.nn.Module):
             dim_out=config['n_mels'], disable_complex=disable_complex, **config['istftnet']
         )
         if not model:
-            model = hf_hub_download(repo_id=repo_id, filename=KModel.MODEL_NAMES[repo_id])
+            model = hf_hub_download(repo_id=repo_id, filename=IndicModel.MODEL_NAMES[repo_id])
         for key, state_dict in torch.load(model, map_location='cpu', weights_only=True).items():
             assert hasattr(self, key), key
             try:
@@ -124,7 +124,7 @@ class KModel(torch.nn.Module):
         ref_s: torch.FloatTensor,
         speed: float = 1,
         return_output: bool = False
-    ) -> Union['KModel.Output', torch.FloatTensor]:
+    ) -> Union['IndicModel.Output', torch.FloatTensor]:
         input_ids = list(filter(lambda i: i is not None, map(lambda p: self.vocab.get(p), phonemes)))
         logger.debug(f"phonemes: {phonemes} -> input_ids: {input_ids}")
         assert len(input_ids)+2 <= self.context_length, (len(input_ids)+2, self.context_length)
@@ -136,8 +136,8 @@ class KModel(torch.nn.Module):
         logger.debug(f"pred_dur: {pred_dur}")
         return self.Output(audio=audio, pred_dur=pred_dur) if return_output else audio
 
-class KModelForONNX(torch.nn.Module):
-    def __init__(self, kmodel: KModel):
+class IndicModelForONNX(torch.nn.Module):
+    def __init__(self, kmodel: IndicModel):
         super().__init__()
         self.kmodel = kmodel
 

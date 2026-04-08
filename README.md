@@ -34,7 +34,7 @@ for gs, ps, audio in generator:
 
 ## Architecture
 
-- **Base model:** Kokoro-82M (hexgrad/kokoro) — Apache 2.0
+- **Base model:** Kokoro-82M architecture — Apache 2.0 (used as base, see paper)
 - **G2P engine:** indic-g2p (native Indic phonemizer)
 - **Training data:** IndicVoices-R dataset
 

@@ -5,11 +5,11 @@ import onnx
 import onnxruntime as ort
 import sounddevice as sd
 
-from kokoro import KModel, KPipeline
-from kokoro.model import KModelForONNX
+from indicvoice import IndicModel, IndicPipeline
+from indicvoice.model import IndicModelForONNX
 
 def export_onnx(model, output):
-    onnx_file = output + "/" + "kokoro.onnx"
+    onnx_file = output + "/" + "indicvoice.onnx"
 
     input_ids = torch.randint(1, 100, (48,)).numpy()
     input_ids = torch.LongTensor([[0, *input_ids, 0]])
@@ -33,7 +33,7 @@ def export_onnx(model, output):
         do_constant_folding = True, 
     )
 
-    print('export kokoro.onnx ok!')
+    print('export indicvoice.onnx ok!')
 
     onnx_model = onnx.load(onnx_file)
     onnx.checker.check_model(onnx_model)
@@ -61,7 +61,7 @@ def load_voice(pipeline, voice, phonemes):
     return pack[len(phonemes) - 1]
 
 def load_sample(model):
-    pipeline = KPipeline(lang_code='a', model=model.kmodel, device='cpu')
+    pipeline = IndicPipeline(lang_code='a', model=model.kmodel, device='cpu')
     text = '''
     In today's fast-paced tech world, building software applications has never been easier — thanks to AI-powered coding assistants.'
     '''
@@ -70,7 +70,7 @@ def load_sample(model):
     '''
     voice = 'checkpoints/voices/af_heart.pt'
 
-    pipeline = KPipeline(lang_code='z', model=model.kmodel, device='cpu')
+    pipeline = IndicPipeline(lang_code='z', model=model.kmodel, device='cpu')
     text = '''
     2月15日晚，猫眼专业版数据显示，截至发稿，《哪吒之魔童闹海》（或称《哪吒2》）今日票房已达7.8亿元，累计票房（含预售）超过114亿元。
     '''
@@ -83,7 +83,7 @@ def load_sample(model):
     return input_ids, style, speed
 
 def inference_onnx(model, output):
-    onnx_file = output + "/" + "kokoro.onnx"
+    onnx_file = output + "/" + "indicvoice.onnx"
     session = ort.InferenceSession(onnx_file)
 
     input_ids, style, speed = load_sample(model)
@@ -115,14 +115,14 @@ def check_model(model):
     sd.wait()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Export kokoro Model to ONNX", add_help=True)
-    parser.add_argument("--inference", "-t", help="test kokoro.onnx model", action="store_true")
-    parser.add_argument("--check", "-m", help="check kokoro model", action="store_true")
+    parser = argparse.ArgumentParser("Export IndicVoice Model to ONNX", add_help=True)
+    parser.add_argument("--inference", "-t", help="test indicvoice.onnx model", action="store_true")
+    parser.add_argument("--check", "-m", help="check indicvoice model", action="store_true")
     parser.add_argument(
         "--config_file", "-c", type=str, default="checkpoints/config.json", help="path to config file"
     )
     parser.add_argument(
-        "--checkpoint_path", "-p", type=str, default="checkpoints/kokoro-v1_0.pth", help="path to checkpoint file"
+        "--checkpoint_path", "-p", type=str, default="checkpoints/indicvoice-v1_0.pth", help="path to checkpoint file"
     )
     parser.add_argument(
         "--output_dir", "-o", type=str, default="onnx", help="output directory"
@@ -138,8 +138,8 @@ if __name__ == "__main__":
     # make dir
     os.makedirs(output_dir, exist_ok=True)
 
-    kmodel = KModel(config=config_file, model=checkpoint_path, disable_complex=True)
-    model = KModelForONNX(kmodel).eval()
+    kmodel = IndicModel(config=config_file, model=checkpoint_path, disable_complex=True)
+    model = IndicModelForONNX(kmodel).eval()
 
     if args.inference:
         inference_onnx(model, output_dir)

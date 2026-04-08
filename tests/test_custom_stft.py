@@ -1,8 +1,8 @@
 import torch
 import numpy as np
 import pytest
-from kokoro.custom_stft import CustomSTFT
-from kokoro.istftnet import TorchSTFT
+from indicvoice.custom_stft import CustomSTFT
+from indicvoice.istftnet import TorchSTFT
 import torch.nn.functional as F
 
 

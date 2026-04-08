@@ -17,7 +17,7 @@ logger.add(
 )
 
 # Disable before release or as needed
-logger.disable("kokoro")
+logger.disable("indicvoice")
 
-from .model import KModel
+from .model import IndicModel
 from .pipeline import IndicPipeline

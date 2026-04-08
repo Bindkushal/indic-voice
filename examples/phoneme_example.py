@@ -1,4 +1,4 @@
-from kokoro import KPipeline, KModel
+from indicvoice import IndicPipeline, IndicModel
 import torch
 from scipy.io import wavfile
 
@@ -20,7 +20,7 @@ def save_audio(audio: torch.Tensor, filename: str):
 
 def main():
     # Initialize pipeline with American English
-    pipeline = KPipeline(lang_code='a')
+    pipeline = IndicPipeline(lang_code='a')
     
     # The phoneme string for:
     # "How are you today? I am doing reasonably well, thank you for asking"

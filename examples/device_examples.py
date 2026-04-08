@@ -2,7 +2,7 @@
 Quick example to show how device selection can be controlled, and was checked
 """
 import time
-from kokoro import KPipeline
+from indicvoice import IndicPipeline
 from loguru import logger
 
 def generate_audio(pipeline, text):
@@ -14,7 +14,7 @@ def generate_audio(pipeline, text):
 def time_synthesis(device=None):
     try:
         start = time.perf_counter()
-        pipeline = KPipeline(lang_code='a', device=device)
+        pipeline = IndicPipeline(lang_code='a', device=device)
         samples = generate_audio(pipeline, "The quick brown fox jumps over the lazy dog.")
         ms = (time.perf_counter() - start) * 1000
         logger.info(f"✓ {device or 'auto':<6} | {ms:>5.1f}ms total | {samples:>6,d} samples")
@@ -24,8 +24,8 @@ def time_synthesis(device=None):
 def compare_shared_model():
     try:
         start = time.perf_counter()
-        en_us = KPipeline(lang_code='a')
-        en_uk = KPipeline(lang_code='a', model=en_us.model)
+        en_us = IndicPipeline(lang_code='a')
+        en_uk = IndicPipeline(lang_code='a', model=en_us.model)
         
         for pipeline in [en_us, en_uk]:
             generate_audio(pipeline, "Testing model reuse.")

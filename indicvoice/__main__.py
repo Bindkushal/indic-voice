@@ -1,9 +1,9 @@
 """Kokoro TTS CLI
 Example usage:
-python3 -m kokoro --text "The sky above the port was the color of television, tuned to a dead channel." -o file.wav --debug
+python3 -m indicvoice --text "The sky above the port was the color of television, tuned to a dead channel." -o file.wav --debug
 
 echo "Bom dia mundo, como vão vocês" > text.txt
-python3 -m kokoro -i text.txt -l p --voice pm_alex > audio.wav
+python3 -m indicvoice -i text.txt -l p --voice pm_alex > audio.wav
 
 Common issues:
 pip not installed: `uv pip install pip`
@@ -33,22 +33,22 @@ languages = [
 ]
 
 if TYPE_CHECKING:
-    from kokoro import KPipeline
+    from indicvoice import IndicPipeline
 
 
 def generate_audio(
-    text: str, kokoro_language: str, voice: str, speed=1
-) -> Generator["KPipeline.Result", None, None]:
-    from kokoro import KPipeline
+    text: str, indic_language: str, voice: str, speed=1
+) -> Generator["IndicPipeline.Result", None, None]:
+    from indicvoice import IndicPipeline
 
-    if not voice.startswith(kokoro_language):
-        logger.warning(f"Voice {voice} is not made for language {kokoro_language}")
-    pipeline = KPipeline(lang_code=kokoro_language)
+    if not voice.startswith(indic_language):
+        logger.warning(f"Voice {voice} is not made for language {indic_language}")
+    pipeline = IndicPipeline(lang_code=indic_language)
     yield from pipeline(text, voice=voice, speed=speed, split_pattern=r"\n+")
 
 
 def generate_and_save_audio(
-    output_file: Path, text: str, kokoro_language: str, voice: str, speed=1
+    output_file: Path, text: str, indic_language: str, voice: str, speed=1
 ) -> None:
     with wave.open(str(output_file.resolve()), "wb") as wav_file:
         wav_file.setnchannels(1)  # Mono audio
@@ -56,7 +56,7 @@ def generate_and_save_audio(
         wav_file.setframerate(24000)  # Sample rate
 
         for result in generate_audio(
-            text, kokoro_language=kokoro_language, voice=voice, speed=speed
+            text, indic_language=indic_language, voice=voice, speed=speed
         ):
             logger.debug(result.phonemes)
             if result.audio is None:
@@ -138,7 +138,7 @@ def main() -> None:
     generate_and_save_audio(
         output_file=out_file,
         text=text,
-        kokoro_language=lang,
+        indic_language=lang,
         voice=args.voice,
         speed=args.speed,
     )

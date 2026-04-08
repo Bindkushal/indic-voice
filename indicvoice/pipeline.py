@@ -1,4 +1,4 @@
-from .model import KModel
+from .model import IndicModel
 from dataclasses import dataclass
 from huggingface_hub import hf_hub_download
 from loguru import logger
@@ -21,7 +21,7 @@ ALIASES = {
 }
 
 LANG_CODES = dict(
-    # pip install misaki[en]
+    # pip install indic-g2p
     a='American English',
     b='British English',
 
@@ -32,56 +32,56 @@ LANG_CODES = dict(
     i='it',
     p='pt-br',
 
-    # pip install misaki[ja]
+    # indic-g2p ja support planned
     j='Japanese',
 
-    # pip install misaki[zh]
+    # indic-g2p zh support planned
     z='Mandarin Chinese',
 )
 
 class IndicPipeline:
     '''
-    KPipeline is a language-aware support class with 2 main responsibilities:
+    IndicPipeline is a language-aware support class with 2 main responsibilities:
     1. Perform language-specific G2P, mapping (and chunking) text -> phonemes
     2. Manage and store voices, lazily downloaded from HF if needed
 
-    You are expected to have one KPipeline per language. If you have multiple
-    KPipelines, you should reuse one KModel instance across all of them.
+    You are expected to have one IndicPipeline per language. If you have multiple
+    IndicPipelines, you should reuse one IndicModel instance across all of them.
 
-    KPipeline is designed to work with a KModel, but this is not required.
+    IndicPipeline is designed to work with a IndicModel, but this is not required.
     There are 2 ways to pass an existing model into a pipeline:
-    1. On init: us_pipeline = KPipeline(lang_code='a', model=model)
+    1. On init: us_pipeline = IndicPipeline(lang_code='a', model=model)
     2. On call: us_pipeline(text, voice, model=model)
 
-    By default, KPipeline will automatically initialize its own KModel. To
-    suppress this, construct a "quiet" KPipeline with model=False.
+    By default, IndicPipeline will automatically initialize its own IndicModel. To
+    suppress this, construct a "quiet" IndicPipeline with model=False.
 
-    A "quiet" KPipeline yields (graphemes, phonemes, None) without generating
+    A "quiet" IndicPipeline yields (graphemes, phonemes, None) without generating
     any audio. You can use this to phonemize and chunk your text in advance.
 
-    A "loud" KPipeline _with_ a model yields (graphemes, phonemes, audio).
+    A "loud" IndicPipeline _with_ a model yields (graphemes, phonemes, audio).
     '''
     def __init__(
         self,
         lang_code: str,
         repo_id: Optional[str] = None,
-        model: Union[KModel, bool] = True,
+        model: Union[IndicModel, bool] = True,
         trf: bool = False,
         en_callable: Optional[Callable[[str], str]] = None,
         device: Optional[str] = None
     ):
-        """Initialize a KPipeline.
+        """Initialize a IndicPipeline.
         
         Args:
             lang_code: Language code for G2P processing
-            model: KModel instance, True to create new model, False for no model
+            model: IndicModel instance, True to create new model, False for no model
             trf: Whether to use transformer-based G2P
             device: Override default device selection ('cuda' or 'cpu', or None for auto)
                    If None, will auto-select cuda if available
                    If 'cuda' and not available, will explicitly raise an error
         """
         if repo_id is None:
-            repo_id = 'hexgrad/Kokoro-82M'
+            repo_id = 'Bindkushal/IndicVoice-82M'
             print(f"WARNING: Defaulting repo_id to {repo_id}. Pass repo_id='{repo_id}' to suppress this warning.")
         self.repo_id = repo_id
         lang_code = lang_code.lower()
@@ -89,7 +89,7 @@ class IndicPipeline:
         assert lang_code in LANG_CODES, (lang_code, LANG_CODES)
         self.lang_code = lang_code
         self.model = None
-        if isinstance(model, KModel):
+        if isinstance(model, IndicModel):
             self.model = model
         elif model:
             if device == 'cuda' and not torch.cuda.is_available():
@@ -106,7 +106,7 @@ class IndicPipeline:
                 else:
                     device = 'cpu'
             try:
-                self.model = KModel(repo_id=repo_id).to(device).eval()
+                self.model = IndicModel(repo_id=repo_id).to(device).eval()
             except RuntimeError as e:
                 if device == 'cuda':
                     raise RuntimeError(f"""Failed to initialize model on CUDA: {e}. 
@@ -126,7 +126,7 @@ class IndicPipeline:
                 from indicg2p import ja
                 self.g2p = ja.JAG2P()
             except ImportError:
-                logger.error("You need to `pip install misaki[ja]` to use lang_code='j'")
+                logger.error("You need to `pip install indic-g2p` to use lang_code='j'")
                 raise
         elif lang_code == 'z':
             try:
@@ -136,7 +136,7 @@ class IndicPipeline:
                     en_callable=en_callable
                 )
             except ImportError:
-                logger.error("You need to `pip install misaki[zh]` to use lang_code='z'")
+                logger.error("You need to `pip install indic-g2p` to use lang_code='z'")
                 raise
         else:
             language = LANG_CODES[lang_code]
@@ -194,7 +194,7 @@ class IndicPipeline:
             z += 1
             if z < len(tokens) and tokens[z].phonemes in bumps:
                 z += 1
-            if next_count - len(KPipeline.tokens_to_ps(tokens[:z])) <= 510:
+            if next_count - len(IndicPipeline.tokens_to_ps(tokens[:z])) <= 510:
                 return z
         return len(tokens)
 
@@ -214,29 +214,29 @@ class IndicPipeline:
             next_ps = t.phonemes + (' ' if t.whitespace else '')
             next_pcount = pcount + len(next_ps.rstrip())
             if next_pcount > 510:
-                z = KPipeline.waterfall_last(tks, next_pcount)
-                text = KPipeline.tokens_to_text(tks[:z])
+                z = IndicPipeline.waterfall_last(tks, next_pcount)
+                text = IndicPipeline.tokens_to_text(tks[:z])
                 logger.debug(f"Chunking text at {z}: '{text[:30]}{'...' if len(text) > 30 else ''}'")
-                ps = KPipeline.tokens_to_ps(tks[:z])
+                ps = IndicPipeline.tokens_to_ps(tks[:z])
                 yield text, ps, tks[:z]
                 tks = tks[z:]
-                pcount = len(KPipeline.tokens_to_ps(tks))
+                pcount = len(IndicPipeline.tokens_to_ps(tks))
                 if not tks:
                     next_ps = next_ps.lstrip()
             tks.append(t)
             pcount += len(next_ps)
         if tks:
-            text = KPipeline.tokens_to_text(tks)
-            ps = KPipeline.tokens_to_ps(tks)
+            text = IndicPipeline.tokens_to_text(tks)
+            ps = IndicPipeline.tokens_to_ps(tks)
             yield ''.join(text).strip(), ''.join(ps).strip(), tks
 
     @staticmethod
     def infer(
-        model: KModel,
+        model: IndicModel,
         ps: str,
         pack: torch.FloatTensor,
         speed: Union[float, Callable[[int], float]] = 1
-    ) -> KModel.Output:
+    ) -> IndicModel.Output:
         if callable(speed):
             speed = speed(len(ps))
         return model(ps, pack[len(ps)-1], speed, return_output=True)
@@ -246,18 +246,18 @@ class IndicPipeline:
         tokens: Union[str, List[en.MToken]],
         voice: str,
         speed: float = 1,
-        model: Optional[KModel] = None
-    ) -> Generator['KPipeline.Result', None, None]:
+        model: Optional[IndicModel] = None
+    ) -> Generator['IndicPipeline.Result', None, None]:
         """Generate audio from either raw phonemes or pre-processed tokens.
         
         Args:
             tokens: Either a phoneme string or list of pre-processed MTokens
             voice: The voice to use for synthesis
             speed: Speech speed modifier (default: 1)
-            model: Optional KModel instance (uses pipeline's model if not provided)
+            model: Optional IndicModel instance (uses pipeline's model if not provided)
         
         Yields:
-            KPipeline.Result containing the input tokens and generated audio
+            IndicPipeline.Result containing the input tokens and generated audio
             
         Raises:
             ValueError: If no voice is provided or token sequence exceeds model limits
@@ -273,7 +273,7 @@ class IndicPipeline:
             logger.debug("Processing phonemes from raw string")
             if len(tokens) > 510:
                 raise ValueError(f'Phoneme string too long: {len(tokens)} > 510')
-            output = KPipeline.infer(model, tokens, pack, speed) if model else None
+            output = IndicPipeline.infer(model, tokens, pack, speed) if model else None
             yield self.Result(graphemes='', phonemes=tokens, output=output)
             return
         
@@ -286,9 +286,9 @@ class IndicPipeline:
                 logger.warning(f"Unexpected len(ps) == {len(ps)} > 510 and ps == '{ps}'")
                 logger.warning("Truncating to 510 characters")
                 ps = ps[:510]
-            output = KPipeline.infer(model, ps, pack, speed) if model else None
+            output = IndicPipeline.infer(model, ps, pack, speed) if model else None
             if output is not None and output.pred_dur is not None:
-                KPipeline.join_timestamps(tks, output.pred_dur)
+                IndicPipeline.join_timestamps(tks, output.pred_dur)
             yield self.Result(graphemes=gs, phonemes=ps, tokens=tks, output=output)
 
     @staticmethod
@@ -334,7 +334,7 @@ class IndicPipeline:
         graphemes: str
         phonemes: str
         tokens: Optional[List[en.MToken]] = None
-        output: Optional[KModel.Output] = None
+        output: Optional[IndicModel.Output] = None
         text_index: Optional[int] = None
 
         @property
@@ -364,8 +364,8 @@ class IndicPipeline:
         voice: Optional[str] = None,
         speed: Union[float, Callable[[int], float]] = 1,
         split_pattern: Optional[str] = r'\n+',
-        model: Optional[KModel] = None
-    ) -> Generator['KPipeline.Result', None, None]:
+        model: Optional[IndicModel] = None
+    ) -> Generator['IndicPipeline.Result', None, None]:
         model = model or self.model
         if model and voice is None:
             raise ValueError('Specify a voice: en_us_pipeline(text="Hello world!", voice="af_heart")')
@@ -390,9 +390,9 @@ class IndicPipeline:
                     elif len(ps) > 510:
                         logger.warning(f"Unexpected len(ps) == {len(ps)} > 510 and ps == '{ps}'")
                         ps = ps[:510]
-                    output = KPipeline.infer(model, ps, pack, speed) if model else None
+                    output = IndicPipeline.infer(model, ps, pack, speed) if model else None
                     if output is not None and output.pred_dur is not None:
-                        KPipeline.join_timestamps(tks, output.pred_dur)
+                        IndicPipeline.join_timestamps(tks, output.pred_dur)
                     yield self.Result(graphemes=gs, phonemes=ps, tokens=tks, output=output, text_index=graphemes_index)
             
             # Non-English processing with chunking
@@ -438,5 +438,5 @@ class IndicPipeline:
                         logger.warning(f'Truncating len(ps) == {len(ps)} > 510')
                         ps = ps[:510]
                         
-                    output = KPipeline.infer(model, ps, pack, speed) if model else None
+                    output = IndicPipeline.infer(model, ps, pack, speed) if model else None
                     yield self.Result(graphemes=chunk, phonemes=ps, output=output, text_index=graphemes_index)
