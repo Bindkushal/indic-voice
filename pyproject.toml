@@ -11,10 +11,14 @@ requires-python = ">=3.9"
 dependencies = [
   "torch>=2.0",
   "soundfile",
-  "indic-g2p",
   "numpy",
+  "huggingface_hub",
+  "loguru",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatchling.build.targets.wheel]
+packages = ["indicvoice"]
