@@ -128,6 +128,15 @@ class IndicPipeline:
             except ImportError:
                 logger.error("You need to `pip install indic-g2p` to use lang_code='j'")
                 raise
+        elif lang_code == 'hi':
+            from indicg2p import hi
+            self.g2p = hi.G2P()
+        elif lang_code == 'pa':
+            from indicg2p import pa
+            self.g2p = pa.G2P()
+        elif lang_code == 'bn':
+            from indicg2p import bn
+            self.g2p = bn.G2P()
         elif lang_code == 'z':
             try:
                 from indicg2p import zh
