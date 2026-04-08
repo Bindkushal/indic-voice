@@ -1,0 +1,20 @@
+[project]
+name = "indic-voice"
+version = "0.1.0"
+description = "Decoder-Only Neural TTS with Native G2P for Indian Languages"
+authors = [
+  {name = "Kushal Kant Bind", email = "bindkushalkant@gmail.com"}
+]
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+dependencies = [
+  "torch>=2.0",
+  "soundfile",
+  "indic-g2p",
+  "numpy",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
