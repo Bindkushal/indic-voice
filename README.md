@@ -10,7 +10,7 @@ A Decoder-Only Neural TTS system with Native G2P for Indian Languages.
 
 ## Overview
 
-IndicVoice extends the Kokoro TTS architecture for Indian languages, replacing the Misaki G2P engine with [indic-g2p](https://github.com/Bindkushal/indic-g2p) — a native Grapheme-to-Phoneme engine built for Devanagari, Gurmukhi, Bengali, and other Indic scripts.
+IndicVoice extends the Kokoro TTS architecture for Indian languages, replacing the default G2P engine with [indic-g2p](https://github.com/Bindkushal/indic-g2p) — a native Grapheme-to-Phoneme engine built for Devanagari, Gurmukhi, Bengali, and other Indic scripts.
 
 ## Supported Languages
 
