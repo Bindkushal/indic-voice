@@ -8,14 +8,56 @@ authors = [
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.9"
+
 dependencies = [
-  "torch>=2.0",
-  "soundfile",
-  "numpy",
-  "huggingface_hub",
-  "loguru",
-  "transformers",
+    # Core ML
+    "torch>=2.0",
+    "numpy>=1.23",
+    "scipy>=1.10",
+    "einops>=0.7",
+
+    # Audio
+    "soundfile>=0.12",
+    "librosa>=0.10",
+
+    # HuggingFace
+    "huggingface_hub>=0.20",
+    "transformers>=4.38",
+    "safetensors>=0.4",
+
+    # G2P — our own Indic G2P engine
+    "indic-g2p @ git+https://github.com/Bindkushal/indic-g2p.git",
+
+    # G2P — espeak Python bindings (fallback for OOV / English)
+    "phonemizer-fork>=3.0",
+    "espeakng-loader>=0.1",
+
+    # Text normalisation
+    "regex>=2023.0",
+    "num2words>=0.5",
+    "unicodedata2>=15.0",
+
+    # Utilities
+    "loguru>=0.7",
+    "addict>=2.4",
+    "tqdm>=4.65",
 ]
+
+[project.optional-dependencies]
+# espeak extras — same pattern as kokoro / misaki
+espeak = ["phonemizer-fork>=3.0", "espeakng-loader>=0.1"]
+
+# For running the demo notebooks
+demo = ["IPython", "matplotlib"]
+
+# Dev / testing
+dev = ["pytest>=7.0", "pytest-cov", "black", "ruff"]
+
+[project.urls]
+Homepage    = "https://github.com/Bindkushal/indic-voice"
+Repository  = "https://github.com/Bindkushal/indic-voice"
+"HuggingFace" = "https://huggingface.co/Bindkushal/indic-voice"
+"Bug Tracker" = "https://github.com/Bindkushal/indic-voice/issues"
 
 [build-system]
 requires = ["hatchling"]
